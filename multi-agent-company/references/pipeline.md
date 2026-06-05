@@ -1,52 +1,65 @@
-# Pipeline 18 giai đoạn — Chi tiết
+# Pipeline 24 giai đoạn — Chi tiết
 
-6 pha × 3: **DISCOVER → DECIDE → BLUEPRINT → BUILD → VERIFY & HARDEN → LAUNCH & EVOLVE**.
+8 pha × 3: **DISCOVER → VALIDATE → DEFINE → DECIDE → BLUEPRINT → BUILD → HARDEN → LAUNCH**.
 
 ## Bảng tổng
 
 | # | Giai đoạn | Pha | Agent | Artifact gốc |
 |---|-----------|-----|-------|--------------|
-| 1 | Ý tưởng & Nghiên cứu thị trường | DISCOVER | Research+Product | vision.md, research.md |
-| 2 | Thu thập Yêu cầu người dùng 🧑 | DISCOVER | Product | requirements.md, scope.md |
-| 3 | Phân tích Khả thi & Sinh phương án | DISCOVER | Architect | feasibility.md, options/*.md |
-| 4 | Định hình & Quyết định 🧑 | DECIDE | Orchestrator | ADR (platform, arch, tech, priority) |
-| 5 | Mô hình hóa Rủi ro & Mối đe dọa | DECIDE | Security | threat-model.md, risks.md |
-| 6 | Prototype & Spike | DECIDE | Engineering | spike-report.md |
-| 7 | Thiết kế Kiến trúc & Dữ liệu | BLUEPRINT ⭐ | Architect | architecture, data-model, api-contract, ADR |
-| 8 | Thiết kế UX/UI & Design System | BLUEPRINT ⭐ | Design | design-system, ux-flows, wireframes |
-| 9 | Lập kế hoạch, Phân rã & Quy tắc | BLUEPRINT ⭐ | PM+Tech Lead | tasks, milestones, dependencies, coding-standards |
-| 10 | Môi trường & Scaffolding | BUILD | DevOps | repo, CI skeleton, dev-env |
-| 11 | Phát triển / Code | BUILD | Engineering | code, ADR, write-back spec |
-| 12 | Kiểm thử & QA | BUILD | QA | test-report, coverage, bugs |
-| 13 | Tích hợp & Staging | VERIFY | DevOps | deploy.md, staging env |
-| 14 | 🔍 Audit sâu (3 phần) | VERIFY | Auditor | scorecard, findings, part-a/b/c |
-| 15 | 🔧 Khắc phục & Nâng cấp ⟲ | VERIFY | Engineering+Architect | tasks, upgrade-plan, ADR |
-| 16 | Sẵn sàng Ra mắt 🧑 | LAUNCH | Release Manager | UAT-report, go-no-go, rollout-plan |
-| 17 | Production & Vận hành | LAUNCH | SRE | release-notes, monitoring, runbook |
-| 18 | Retrospective, 10/10 & Cải tiến | LAUNCH | Orchestrator | retrospective, backlog-next → ↩GĐ1 |
+| 1 | Thinking & Problem Framing | DISCOVER | product | validation/problem-statement.md |
+| 2 | Market & Competitor Research | DISCOVER | researcher | validation/competitor-analysis.md |
+| 3 | Audience Segmentation & Personas | DISCOVER | researcher | validation/audience-personas.md |
+| 4 | User Conversations First 🧑 | VALIDATE | product-validator | validation/user-interviews.md |
+| 5 | Idea Validation Battery | VALIDATE | product-validator | validation/validation-experiments.md |
+| 6 | Demand Validation & Waitlist | VALIDATE | product-validator | validation/demand-signals.md, waitlist.md |
+| 7 | Requirements & Scope 🧑 | DEFINE | product | requirements.md, scope.md |
+| 8 | Feature Prioritization | DEFINE | product | priority-matrix.md, requirements(MVP) |
+| 9 | Feasibility & Solution Options | DEFINE | architect | options/*.md |
+| 10 | Shaping & Decisions 🧑 | DECIDE | orchestrator | decisions/ADR-* |
+| 11 | Threat Modeling | DECIDE | security | threat-model.md, risks.md |
+| 12 | Architecture & Data Design | BLUEPRINT ⭐ | architect | architecture, data-model, api-contract |
+| 13 | UX/UI & Design System | BLUEPRINT ⭐ | (design) | design-system, ux-flows |
+| 14 | Planning, Rules & Breakdown | BLUEPRINT ⭐ | product+architect | tasks, milestones, coding-standards |
+| 15 | Environment & Scaffolding | BUILD | (devops) | repo, CI skeleton, dev-env |
+| 16 | Prototype & Spike | BUILD | engineering | spike-report |
+| 17 | Development (feedback-loop) | BUILD | engineering | code, ADR, write-back |
+| 18 | Testing & QA | BUILD | qa | test-report, coverage |
+| 19 | Integration & Staging | HARDEN | (devops) | deploy.md, staging |
+| 20 | Deep Audit (3 phần) | HARDEN | auditor | scorecard, findings |
+| 21 | Remediation & Upgrade ⟲ | HARDEN | engineering+architect | tasks, upgrade-plan |
+| 22 | Release Readiness 🧑 | LAUNCH | release-manager | uat-report, go-no-go |
+| 23 | Production & Operations | LAUNCH | (sre) | release-notes, monitoring |
+| 24 | Retrospective, 10/10 & Evolve | LAUNCH | orchestrator | retrospective, backlog-next → ↩GĐ1 |
 
-## Vòng lặp Discover ⇄ Decide (GĐ1–6)
-
-```
-GĐ1 Nghiên cứu → GĐ2 Hỏi người dùng🧑 → GĐ3 Sinh phương án
-                                                   ↓
-     ← (chưa hội tụ) ← GĐ4 Quyết định🧑 ←───────┘
-                              ↓ (hội tụ)
-                         GĐ5 Threat Model → GĐ6 Spike
-                                                ↓
-                    ← (spike fail → GĐ3) ←  ĐẠT? → sang GĐ7
-```
-
-Max loop: `max_discover_decide_loops` (mặc định 3).
-
-## Dòng chảy GĐ14–15 (audit + khắc phục)
+## Pha DISCOVER + VALIDATE (GĐ1-6) — Build-Measure-Learn
 
 ```
-GĐ14 Audit → findings (BLOCKED)
-  → GĐ15 fix → RE-AUDIT → PASS → GĐ16 | BLOCKED → loop (max 3)
+GĐ1 Thinking ──► GĐ2 Research ──► GĐ3 Personas
+                                       │
+                                       ▼
+GĐ4 Interviews🧑 ──► GĐ5 Validation ──► GĐ6 Demand+Waitlist
+                                            │
+                              ┌─────────────┼─────────────┐
+                            GO          PIVOT           KILL
+                              │            │              │
+                              ▼      (↩GĐ1-3,         (dừng,
+                          GĐ7 DEFINE  max 3 vòng)      ADR lý do)
 ```
 
-## Pha BLUEPRINT (GĐ7–9) — cổng nghiêm nhất
+Chi tiết playbook: skill `product-discovery` + `references/validation-playbook.md`.
 
-Xem `../SKILL.md` phần "Pha BLUEPRINT" và `../../docs/blueprint.md` §3 để biết tiêu chí
-gate chi tiết. Nguyên tắc: "không dòng code nào trước khi BLUEPRINT PASS".
+## Pha DECIDE (GĐ9-10) — Discover⇄Decide loop
+
+```
+GĐ9 Sinh phương án → GĐ10 Quyết định🧑 → hội tụ? → GĐ11 | chưa → ↩ (max 3)
+```
+
+## Pha BLUEPRINT (GĐ12-14) — cổng nghiêm nhất
+
+"Không dòng code nào trước khi BLUEPRINT PASS." Xem `../SKILL.md` + `../../docs/blueprint.md`.
+
+## Dòng chảy GĐ20-21 (audit + khắc phục)
+
+```
+GĐ20 Audit → findings (BLOCKED) → GĐ21 fix → RE-AUDIT → PASS → GĐ22 | BLOCKED → loop (max 3)
+```
