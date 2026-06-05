@@ -1,0 +1,26 @@
+{
+  "title": "scorecard.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["audit_run", "parts", "composite", "threshold", "open_critical", "open_high", "gate"],
+  "properties": {
+    "audit_run": { "type": "string", "minLength": 1 },
+    "parts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["score", "weight"],
+        "properties": {
+          "score": { "type": "number", "minimum": 0, "maximum": 10 },
+          "weight": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "composite": { "type": "number", "minimum": 0, "maximum": 10 },
+    "threshold": { "type": "number", "minimum": 0, "maximum": 10 },
+    "open_critical": { "type": "integer", "minimum": 0 },
+    "open_high": { "type": "integer", "minimum": 0 },
+    "gate": { "type": "string", "enum": ["PASS", "BLOCKED"] }
+  }
+}

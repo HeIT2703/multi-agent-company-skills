@@ -1,0 +1,61 @@
+{
+  "title": "project-profile.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project", "execution", "audit"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "size", "type"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "size": { "type": "string", "enum": ["super-large", "small", "personal"] },
+        "type": { "type": "string", "enum": ["application", "web", "saas", "tool"] }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow_fast_track", "max_remediation_loops", "escalate_to_human", "parallel_agents"],
+      "properties": {
+        "allow_fast_track": { "type": "boolean" },
+        "max_remediation_loops": { "type": "integer", "minimum": 1 },
+        "escalate_to_human": { "type": "boolean" },
+        "parallel_agents": { "type": "boolean" }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["threshold_composite", "block_on", "parts_required", "isolate_parts"],
+      "properties": {
+        "threshold_composite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["super-large", "small", "personal"],
+          "properties": {
+            "super-large": { "type": "number", "minimum": 0, "maximum": 10 },
+            "small": { "type": "number", "minimum": 0, "maximum": 10 },
+            "personal": { "type": "number", "minimum": 0, "maximum": 10 }
+          }
+        },
+        "block_on": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["critical", "high", "medium", "low"] }
+          }
+        },
+        "parts_required": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["A", "B", "C"] }
+          }
+        },
+        "isolate_parts": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "title": "findings.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findings"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "part", "severity", "title", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^F-[0-9]{4}$" },
+          "part": { "type": "string", "enum": ["A", "B", "C"] },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "title": { "type": "string", "minLength": 1 },
+          "evidence": { "type": ["string", "null"] },
+          "recommendation": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["open", "in-progress", "fixed", "accepted-risk", "wont-fix"] },
+          "owner": { "type": ["string", "null"] },
+          "task": { "type": ["string", "null"] },
+          "adr": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

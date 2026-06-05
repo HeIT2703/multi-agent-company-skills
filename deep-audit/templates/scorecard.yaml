@@ -1,0 +1,16 @@
+audit_run: 2026-06-10-pre-release
+parts:
+  technical:
+    score: 0.0
+    weight: 0.35
+  security:
+    score: 0.0
+    weight: 0.35
+  product_context:
+    score: 0.0
+    weight: 0.30
+composite: 0.0               # = Σ(score×weight); tính bằng recompute-scorecard.sh
+threshold: 8.5               # lấy theo size trong project-profile.yaml
+open_critical: 0
+open_high: 0
+gate: BLOCKED                # PASS khi composite>=threshold & sạch severity trong block_on

@@ -1,0 +1,7 @@
+current_stage: 01-ideation-research
+status: not-started            # not-started | in-progress | blocked | done
+active_agents: []
+last_gate_passed: none
+remediation_loops: 0           # so với execution.max_remediation_loops
+escalated: false               # true khi chạm trần loop -> chờ người
+updated: 2026-06-05

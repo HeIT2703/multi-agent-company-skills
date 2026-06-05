@@ -1,0 +1,11 @@
+findings:
+  - id: F-0001
+    part: A                    # A=kỹ thuật | B=bảo mật | C=sản phẩm/đồng bộ
+    severity: high             # critical | high | medium | low
+    title: "N+1 query ở /orders"
+    evidence: "src/orders/service.ts:42; p95=210ms"
+    recommendation: "Eager-load + index"
+    status: open               # open | in-progress | fixed | accepted-risk | wont-fix
+    owner: backend
+    task: null                 # điền TASK-xxx ở GĐ11
+    adr: null                  # bắt buộc nếu status=accepted-risk

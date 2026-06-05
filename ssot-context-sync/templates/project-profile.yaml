@@ -1,0 +1,25 @@
+project:
+  name: "Tên dự án"
+  size: small                  # super-large | small | personal
+  type: saas                   # application | web | saas | tool
+
+execution:
+  allow_fast_track: false      # personal: true -> cho phép gộp GĐ 01-06 nếu task nhỏ
+  max_remediation_loops: 3     # GĐ11: finding trượt quá số lần này -> blocked + escalate
+  escalate_to_human: true      # khi chạm trần loop, dừng và chờ người
+  parallel_agents: true        # cho nhiều agent chạy song song (kèm single-writer + append-only)
+
+audit:
+  threshold_composite:         # điểm tối thiểu để qua cổng GĐ10
+    super-large: 9.5
+    small: 8.5
+    personal: 8.0
+  block_on:                    # mức severity chặn release
+    super-large: [critical, high]
+    small: [critical, high]
+    personal: [critical]
+  parts_required:
+    super-large: [A, B, C]
+    small: [A, B, C]
+    personal: [A, C]
+  isolate_parts: true          # bắt buộc chạy A/B/C ở các session riêng (chống tràn context)
