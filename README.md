@@ -1,9 +1,10 @@
 # Multi-Agent Company — Skills
 
 Phương pháp luận vận hành một dự án phần mềm như một **công ty multi-agent**: pipeline
-13 giai đoạn, SSOT `.context/` đồng bộ context cứng, audit sâu 3 phần, và lớp tích hợp
-đa harness — để nhiều agent (nhiều harness) làm việc như một công ty thật và sản phẩm
-đạt 10/10 có bằng chứng.
+24 giai đoạn (8 pha: Discover → Validate → Define → Decide → Blueprint → Build → Harden →
+Launch), SSOT `.context/` đồng bộ context cứng, validate-trước-khi-build, audit sâu 3 phần,
+và lớp tích hợp đa harness — để nhiều agent (nhiều harness) làm việc như một công ty thật
+và sản phẩm đạt 10/10 có bằng chứng.
 
 Họ skill composable theo chuẩn [Agent Skills](https://agentskills.io/specification)
 (progressive disclosure: chỉ `name` + `description` được preload; thân `SKILL.md` nạp khi
@@ -36,10 +37,27 @@ Chép các thư mục skill vào nơi harness của bạn quét skill:
 cp -r multi-agent-company product-discovery ssot-context-sync quality-gates deep-audit harness-integration decision-gates  ~/.kiro/skills/
 ```
 
-## Bắt đầu nhanh
+## Workflow
+
+Xem [`WORKFLOW.md`](WORKFLOW.md) — sơ đồ Mermaid trực quan (8 pha, 4 cổng chặn, vòng đời agent).
+
+## Bắt đầu nhanh — Orchestrator CLI
+
+`run.sh` biến skill từ "tài liệu" thành "chạy được": cho biết đang ở đâu, gate gì, lệnh kế.
 
 ```bash
-# scaffold SSOT .context/ cho một dự án mới (tự sinh 13 stage + 9 charter agent)
+bash run.sh init ./my-project "Tên dự án" small saas   # khởi tạo .context/
+bash run.sh status ./my-project                         # trạng thái + gate + lệnh kế
+bash run.sh map                                         # in bản đồ 24 giai đoạn
+bash run.sh gate ./my-project                           # checklist gate hiện tại
+bash run.sh advance ./my-project                        # qua cổng -> giai đoạn kế
+bash run.sh validate ./my-project go                    # quyết định cổng validation (go|pivot|kill)
+bash run.sh agent ./my-project                          # agent phụ trách giai đoạn hiện tại
+```
+
+Hoặc gọi trực tiếp scaffold script:
+
+```bash
 bash ssot-context-sync/scripts/init-context.sh ./my-project "Tên dự án" small saas
 ```
 
