@@ -91,5 +91,16 @@ Agent Release Manager trình:
 
 ## Tài nguyên
 
+- **Sổ tay tra cứu kỹ thuật** (BẮT BUỘC đọc ở GĐ3): `references/tech-knowledge-base.md`
+  - Platform catalog (web/mobile/desktop/CLI) + tradeoff
+  - Architecture patterns (monolith → microservices, MVVM/MVI/Clean, event-driven, CQRS...)
+  - Clean code & design principles (SOLID, DDD, hexagonal...)
+  - Concurrency & parallelism patterns (async, actor, CSP, reactive...)
+  - Load balancing & scaling strategies
+  - Database selection guide
+  - Security & auth patterns
+  - Tech stack catalog (framework FE/BE/DevOps)
+  - Workflow đặc thù theo loại (application/web/saas/tool)
+  - Testing strategy matrix
 - Template phương án: `templates/option.md`
 - Template quyết định: `templates/decision-adr.md`
