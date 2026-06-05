@@ -1,71 +1,84 @@
 ---
 name: multi-agent-company
 description: >
-  Vận hành một dự án phần mềm như một công ty multi-agent: pipeline 13 giai đoạn
-  (ý tưởng → thiết kế → code → audit sâu 3 phần → khắc phục → release 10/10) chạy
-  trên SSOT .context/ với quy tắc đồng bộ context cứng. Dùng skill này khi điều phối
-  nhiều agent hoặc phòng ban trên cùng một dự án, khi khởi tạo .context/ làm
-  single-source-of-truth, khi áp cổng chất lượng giữa các giai đoạn, khi chạy vòng
-  audit/khắc phục, hoặc khi cần đồng bộ docs với code giữa các phiên và harness.
+  Vận hành một dự án phần mềm như một công ty multi-agent: pipeline 18 giai đoạn (6 pha:
+  Discover⇄Decide lặp → Blueprint viên ngọc → Build → Verify → Launch) chạy trên SSOT
+  .context/ với human-checkpoint, đồng bộ context cứng, audit sâu 3 phần + circuit-breaker.
+  Dùng khi điều phối nhiều agent/phòng ban, khi khởi tạo .context/, khi cần vòng lặp
+  nghiên cứu-hỏi-quyết định, khi áp cổng chất lượng, hoặc khi đồng bộ docs với code.
 ---
 
-# Multi-Agent Company — Hub
+# Multi-Agent Company — Hub (v2.0)
 
-Đây là skill **điều phối** (orchestrator). Nó định nghĩa quy trình tổng và gọi các
-sub-skill chuyên biệt đúng lúc. Mục tiêu: nhiều agent làm việc như một công ty thật,
-context luôn đồng bộ, sản phẩm đạt 10/10 có bằng chứng.
+Skill **điều phối** (orchestrator). Định nghĩa quy trình tổng 18 giai đoạn và gọi các
+sub-skill chuyên biệt đúng lúc.
 
 ## Nguyên tắc bất biến
 
-1. **SSOT** — "Nếu nó không nằm trong `.context/`, nó không tồn tại." Mọi agent đọc/ghi qua SSOT, không giữ context riêng trong đầu.
-2. **Quality Gate** — không qua cổng thì không sang giai đoạn sau.
-3. **Handoff Contract** — agent sau chỉ cần đọc artifact, không cần "hiểu" agent trước.
+1. **SSOT** — "Nếu nó không nằm trong `.context/`, nó không tồn tại."
+2. **Quality Gate + Human-Checkpoint** — không qua cổng/người duyệt thì không đi tiếp.
+3. **Handoff Contract** — agent sau chỉ cần đọc artifact.
+4. **Discover⇄Decide là vòng lặp** — AI nghiên cứu + hỏi người dùng song song, lặp đến khi hội tụ.
+5. **Pha BLUEPRINT là viên ngọc** — chặt/rộng/sâu/bao quát/đúng ý người dùng nhất trước khi code.
 
-## Giao thức bắt buộc cho MỌI agent (mỗi lần chạy)
+## Giao thức bắt buộc (mỗi lần chạy)
 
 `HYDRATE → VALIDATE → EXECUTE → WRITE-BACK`
 
-1. **HYDRATE:** đọc `.context/manifest.yaml` + `project/state.yaml` + L0→L3 liên quan + `progress.md`. Không bắt đầu "từ trí nhớ".
-2. **VALIDATE:** đối chiếu việc sắp làm với `requirements.md` / `architecture.md` / `glossary.md`. Mâu thuẫn → dừng, báo orchestrator.
-3. **EXECUTE:** làm task.
-4. **WRITE-BACK:** ghi `sessions/`, cập nhật `progress.md`, tạo ADR nếu có quyết định lớn, cập nhật ngược spec nếu lệch, ghi `changelog.md`.
+## Bản đồ 18 giai đoạn (6 pha × 3)
 
-## Bản đồ 13 giai đoạn
+| # | Giai đoạn | Pha | Sub-skill | Cổng |
+|---|-----------|-----|-----------|------|
+| 1 | Ý tưởng & Nghiên cứu | DISCOVER | — | gate |
+| 2 | Thu thập Yêu cầu người dùng | DISCOVER | `decision-gates` | 🧑 human |
+| 3 | Khả thi & Sinh phương án | DISCOVER | — | gate |
+| 4 | Định hình & Quyết định | DECIDE | `decision-gates` | 🧑 human |
+| 5 | Mô hình hóa Rủi ro & Đe dọa | DECIDE | — | gate |
+| 6 | Prototype & Spike | DECIDE | — | gate |
+| 7 | Thiết kế Kiến trúc & Dữ liệu | BLUEPRINT ⭐ | `ssot-context-sync` | gate (nghiêm nhất) |
+| 8 | Thiết kế UX/UI & Design System | BLUEPRINT ⭐ | — | gate (nghiêm nhất) |
+| 9 | Lập kế hoạch, Phân rã & Quy tắc | BLUEPRINT ⭐ | `quality-gates` | gate (nghiêm nhất) |
+| 10 | Môi trường & Scaffolding | BUILD | `harness-integration` | gate |
+| 11 | Phát triển / Code | BUILD | `ssot-context-sync` | gate |
+| 12 | Kiểm thử & QA | BUILD | — | gate |
+| 13 | Tích hợp & Staging | VERIFY | — | gate |
+| 14 | 🔍 Audit sâu (3 phần) | VERIFY | `deep-audit` | gate |
+| 15 | 🔧 Khắc phục & Nâng cấp | VERIFY | `deep-audit` | gate |
+| 16 | Sẵn sàng Ra mắt (UAT, go/no-go) | LAUNCH | `decision-gates` | 🧑 human |
+| 17 | Production & Vận hành | LAUNCH | — | gate |
+| 18 | Retrospective, 10/10 & Cải tiến | LAUNCH | — | gate → ↩ GĐ1 |
 
-| # | Giai đoạn | Nhóm | Sub-skill liên quan |
-|---|-----------|------|---------------------|
-| 1 | Ý tưởng & Nghiên cứu | Conceive | — |
-| 2 | Yêu cầu & Phạm vi | Conceive | `quality-gates` |
-| 3 | Khả thi & Chiến lược kỹ thuật | Conceive | — |
-| 4 | Thiết kế hệ thống & Kiến trúc | Design | `ssot-context-sync` |
-| 5 | Thiết kế UX/UI | Design | — |
-| 6 | Lập kế hoạch & Phân rã | Design | `quality-gates` |
-| 7 | Phát triển / Code | Build | `ssot-context-sync` |
-| 8 | Kiểm thử & QA | Build | — |
-| 9 | Tích hợp & Staging | Verify & Harden | — |
-| 10 | 🔍 Audit sâu (3 phần) | Verify & Harden | `deep-audit` |
-| 11 | 🔧 Khắc phục & Nâng cấp | Verify & Harden | `deep-audit` |
-| 12 | Ra mắt Production & Vận hành | Launch & Evolve | — |
-| 13 | Sản phẩm 10/10 & Cải tiến | Launch & Evolve | — |
+## Vòng lặp Discover ⇄ Decide
 
-> GĐ 13 chỉ được tuyên bố "10/10" khi scorecard của GĐ 10 (sau re-audit) đạt ngưỡng.
-> GĐ 13 khép vòng: feedback nuôi lại GĐ 1 cho phiên bản sau.
+GĐ1–6 tạo vòng lặp hội tụ:
+- AI nghiên cứu (GĐ1) + hỏi người dùng (GĐ2) → sinh phương án (GĐ3) → người chọn (GĐ4).
+- Quyết định xong → mở câu hỏi mới? → lặp lại GĐ1–3 (tối đa `max_discover_decide_loops`).
+- GĐ4 hội tụ → threat model (GĐ5) → spike validate (GĐ6) → spike pass → sang BLUEPRINT.
+- Spike fail → quay lại GĐ3–4 (phương án khác).
+
+## Pha BLUEPRINT (viên ngọc — cổng nghiêm nhất)
+
+GĐ7–9 phải tạo ra bộ tài liệu thiết kế CHẶT/RỘNG/SÂU/BAO QUÁT/ĐÚNG Ý NGƯỜI DÙNG nhất.
+Cổng GĐ9→10:
+- architecture cover 100% requirements.
+- api-contract đủ để FE/BE code ĐỘC LẬP.
+- glossary thống nhất (reconciliation kiểm).
+- mọi task có tiêu chí nghiệm thu.
+- mọi quyết định lớn có ADR.
+- Không pass → QUAY LẠI BLUEPRINT. Không "cho qua vì deadline".
 
 ## Khi nào gọi sub-skill nào
 
-- **Bắt đầu dự án / cần đọc-ghi SSOT** → `ssot-context-sync` (scaffold `.context/`, áp giao thức + canonical rules).
-- **Chuyển giữa hai giai đoạn** → `quality-gates` (kiểm DoR/DoD).
-- **Trước release (GĐ 10–11)** → `deep-audit` (chấm 3 phần, vòng khắc phục có circuit-breaker).
-- **Tích hợp vào IDE/harness cụ thể** → `harness-integration` (entry-point, vệ sinh RAG, schema, tooling).
+- **SSOT + scaffold** → `ssot-context-sync`
+- **Human-checkpoint / Quyết định** → `decision-gates`
+- **Chuyển giai đoạn** → `quality-gates`
+- **Audit + Khắc phục** → `deep-audit`
+- **Tích hợp IDE** → `harness-integration`
 
-## Co giãn theo quy mô × loại
+## Co giãn
 
-Đọc `project/project-profile.yaml` (`size`, `type`) để đặt độ nghiêm của cổng và ngưỡng audit.
-Chi tiết: `references/scaling-matrix.md`. Chi tiết từng giai đoạn: `references/pipeline.md`.
-Ví dụ chạy thật GĐ1→GĐ13 (dự án personal/tool, có fast-track): `references/example-run.md`.
+- super-large: 18 full.
+- small: bỏ GĐ5,6; gộp GĐ7–9.
+- personal + fast-track: gộp GĐ1–6 thành 1–2 phiên; BLUEPRINT gọn.
 
-## Điều phối nhiều agent
-
-- Agent **không** nói chuyện trực tiếp — giao tiếp qua artifact trong SSOT.
-- Mỗi agent có vai trò hẹp + quyền ghi hẹp (theo front-matter `writers`).
-- **Auditor là agent độc lập**, không phải agent đã viết code.
+Chi tiết: `references/pipeline.md`, `references/scaling-matrix.md`, `references/example-run.md`.

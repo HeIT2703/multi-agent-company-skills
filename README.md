@@ -13,8 +13,9 @@ liên quan; `references/`, `scripts/` nạp khi thực thi).
 
 | Đường dẫn | Mô tả |
 |-----------|-------|
-| [`multi-agent-company/`](multi-agent-company/) | **HUB** — bản đồ 13 giai đoạn, giao thức bắt buộc, điều phối sub-skill |
-| [`ssot-context-sync/`](ssot-context-sync/) | Khởi tạo & duy trì SSOT `.context/`, Hydrate→Write-back, canonical, scaffold + charter 9 agent |
+| [`multi-agent-company/`](multi-agent-company/) | **HUB** — bản đồ 18 giai đoạn (6 pha), giao thức bắt buộc, vòng lặp Discover⇄Decide, điều phối sub-skill |
+| [`ssot-context-sync/`](ssot-context-sync/) | Khởi tạo & duy trì SSOT `.context/`, Hydrate→Write-back, canonical, scaffold + charter 11 agent |
+| [`decision-gates/`](decision-gates/) | Human-checkpoint: sinh phương án → người chọn → ADR. 3 điểm: GĐ2, GĐ4, GĐ16 |
 | [`quality-gates/`](quality-gates/) | Cổng DoR/DoD giữa các giai đoạn |
 | [`deep-audit/`](deep-audit/) | Audit 3 phần (kỹ thuật / bảo mật / sản phẩm-đồng bộ) + vòng lặp khắc phục có circuit-breaker |
 | [`harness-integration/`](harness-integration/) | Entry-point đa harness, vệ sinh RAG, JSON Schema, tooling CLI |
@@ -31,7 +32,7 @@ Chép các thư mục skill vào nơi harness của bạn quét skill:
 - **Cursor / harness khác:** trỏ entry-point (xem `harness-integration/`) vào hub.
 
 ```bash
-cp -r multi-agent-company ssot-context-sync quality-gates deep-audit harness-integration  ~/.kiro/skills/
+cp -r multi-agent-company ssot-context-sync quality-gates deep-audit harness-integration decision-gates  ~/.kiro/skills/
 ```
 
 ## Bắt đầu nhanh
