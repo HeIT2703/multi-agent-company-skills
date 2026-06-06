@@ -66,6 +66,26 @@ Agent **chỉ được ghi vào đúng lớp/quyền** theo front-matter `writer
 bash scripts/init-context.sh /đường/dẫn/repo "Tên dự án" small saas
 ```
 
-`init-context.sh` tạo đầy đủ: 13 `stages/*/gate.md`, `project/` canonical, `manifest.yaml`,
-`global/context-protocol.md`, và **9 charter agent** trong `agents/` (orchestrator, product,
-architect, backend/frontend/database-engineer, qa, auditor, reconciliation) với RBAC `writers`.
+`init-context.sh` tạo đầy đủ: **8 pha → 24 sub-stage**, mỗi sub-stage một **bundle 5 file**
+(`instructions.md` / `rules.md` / `framework.md` / `knowledge.md` / `gate.md`), `project/`
+canonical, `validation/`, `options/`, `manifest.yaml`, `global/context-protocol.md`, và
+**13 charter agent** trong `agents/` với RBAC `writers`.
+
+## Cấu trúc 2 tầng: Pha → Sub-stage → Bundle
+
+Để chống "rối" và "trùng", pipeline tổ chức 2 tầng:
+
+```
+stages/
+└── <pha>/                       # 8 pha (1-discover ... 8-launch)
+    └── <sub-stage>/             # mỗi pha 2-4 sub-stage
+        ├── instructions.md      # CÁC BƯỚC agent phải làm
+        ├── rules.md             # BỘ LUẬT cứng (trỏ tới tech/0X-*.md)
+        ├── framework.md         # BỘ KHUÔN / mental model
+        ├── knowledge.md         # BỘ KIẾN THỨC tra cứu (trỏ tới KB)
+        └── gate.md              # DoR/DoD + flag cổng
+```
+
+> Mỗi sub-stage có **bộ luật + khung + instruction + kiến thức RIÊNG** gắn đúng agent.
+> Ví dụ `5-blueprint/1-architecture-data` dùng `tech/01-architecture-rules.md + 04-database-rules.md`,
+> còn `6-build/3-development` dùng `tech/02-clean-code-rules.md + 03-concurrency-scaling-rules.md`.

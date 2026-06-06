@@ -30,26 +30,161 @@ mkdir -p \
   "$CTX/templates" "$CTX/schemas" "$CTX/scripts"
 
 # 24 stages (8 pha)
-STAGES=(
-  01-thinking-problem-framing 02-market-competitor-research 03-audience-segmentation
-  04-user-conversations 05-idea-validation 06-demand-validation-waitlist
-  07-requirements-scope 08-feature-prioritization 09-feasibility-options
-  10-shaping-decisions 11-threat-modeling
-  12-architecture-data-design 13-ux-ui-design 14-planning-rules-breakdown
-  15-environment-scaffolding 16-prototype-spike 17-development 18-testing-qa
-  19-integration-staging 20-deep-audit 21-remediation-upgrade
-  22-release-readiness 23-production-operations 24-retrospective-final
+# ============================================================================
+# CẤU TRÚC 2 TẦNG: 8 PHA → 23 SUB-STAGE → mỗi sub-stage 1 BỘ HÀNH TRANG (bundle)
+# Mỗi dòng: phase|substage|agent|skill|rules|knowledge|framework|flag
+#   rules     = file rule cứng phải tuân (trong decision-gates/references/tech/ hoặc playbook)
+#   knowledge = nguồn kiến thức để tra cứu
+#   framework = mental-model / template chính
+#   flag      = HUMAN | VALIDATION-GATE | MVP-GATE | BLUEPRINT-GATE | AUDIT-GATE | "" 
+# ============================================================================
+SUBSTAGES=(
+  # PHA 1 — DISCOVER
+  "1-discover|1-problem-framing|product|product-discovery|playbook:GĐ1|none|Problem-Statement + 5-Whys + Riskiest-Assumption|"
+  "1-discover|2-market-competitor|researcher|product-discovery|playbook:GĐ2|web-research|TAM-SAM-SOM + Competitor-Matrix + Gap|"
+  "1-discover|3-audience-personas|researcher|product-discovery|playbook:GĐ3|none|Segmentation + Beachhead + JTBD-Personas|"
+  # PHA 2 — VALIDATE
+  "2-validate|1-user-interviews|product-validator|product-discovery|playbook:GĐ4|none|The-Mom-Test (hỏi quá khứ, không pitch)|HUMAN"
+  "2-validate|2-idea-experiments|product-validator|product-discovery|playbook:GĐ5|none|Experiment-Battery (smoke/wizard/concierge/fake-door/pre-sale)|"
+  "2-validate|3-demand-waitlist|product-validator|product-discovery|playbook:GĐ6|none|Demand-Signal + Waitlist + GO/PIVOT/KILL|VALIDATION-GATE"
+  # PHA 3 — DEFINE
+  "3-define|1-requirements-scope|product|decision-gates|playbook:GĐ7|none|User-Stories + In/Out-Scope + NFR|HUMAN"
+  "3-define|2-feature-prioritization|product|product-discovery|playbook:GĐ8|none|MoSCoW / RICE / Kano + MVP-cut|MVP-GATE"
+  # PHA 4 — DECIDE
+  "4-decide|1-solution-options|architect|decision-gates|tech/01-architecture-rules.md|tech-knowledge-base.md|Diverge: 2-3 options + tradeoff|"
+  "4-decide|2-shaping-decisions|orchestrator|decision-gates|tech/01-architecture-rules.md|tech-knowledge-base.md|Converge: chọn + ghi ADR (platform/arch/tech)|HUMAN"
+  "4-decide|3-threat-modeling|security|decision-gates|tech/03-concurrency-scaling-rules.md|tech-knowledge-base.md|STRIDE + risk register|"
+  # PHA 5 — BLUEPRINT (viên ngọc)
+  "5-blueprint|1-architecture-data|architect|ssot-context-sync|tech/01-architecture-rules.md+04-database-rules.md|tech-knowledge-base.md|C4 + data-model + api-contract|"
+  "5-blueprint|2-ux-ui-design|architect|ssot-context-sync|tech/05-frontend-rules.md|tech-knowledge-base.md|Design-System + UX-flows + a11y|"
+  "5-blueprint|3-planning-rules|product|quality-gates|tech/02-clean-code-rules.md|tech-knowledge-base.md|Task-breakdown + coding-standards + DoD|BLUEPRINT-GATE"
+  # PHA 6 — BUILD
+  "6-build|1-scaffolding|backend-engineer|harness-integration|tech/06-devops-rules.md|tech-knowledge-base.md|Repo + CI skeleton + dev-env|"
+  "6-build|2-spike|backend-engineer|ssot-context-sync|tech/02-clean-code-rules.md|tech-knowledge-base.md|Throwaway PoC validate giả định kỹ thuật|"
+  "6-build|3-development|backend-engineer|ssot-context-sync|tech/02-clean-code-rules.md+03-concurrency-scaling-rules.md|tech-knowledge-base.md|Feature-increment + Hydrate→Write-back|"
+  "6-build|4-testing-qa|qa|quality-gates|tech/02-clean-code-rules.md|tech-knowledge-base.md|Test-pyramid (unit/integration/e2e)|"
+  # PHA 7 — HARDEN
+  "7-harden|1-staging|backend-engineer|harness-integration|tech/06-devops-rules.md|tech-knowledge-base.md|CI/CD + staging + smoke-test|"
+  "7-harden|2-deep-audit|auditor|deep-audit|none|none|Audit 3 phần A/B/C (isolate sessions)|"
+  "7-harden|3-remediation|architect|deep-audit|none|none|Fix findings + re-audit (circuit-breaker)|AUDIT-GATE"
+  # PHA 8 — LAUNCH
+  "8-launch|1-release-readiness|release-manager|decision-gates|tech/06-devops-rules.md|none|UAT + go/no-go + rollout/rollback|HUMAN"
+  "8-launch|2-production|orchestrator|deep-audit|tech/06-devops-rules.md|none|Monitoring + golden-signals + incident|"
+  "8-launch|3-retrospective|orchestrator|product-discovery|none|none|Retro + 10/10 verdict + backlog-next → ↩PHA1|"
 )
-for s in "${STAGES[@]}"; do
-  mkdir -p "$CTX/stages/$s"
-  cat > "$CTX/stages/$s/gate.md" <<EOF
-# Gate — $s
 
-## Definition of Ready (DoR)
-- [ ] <điều kiện đủ để BẮT ĐẦU giai đoạn này>
+for entry in "${SUBSTAGES[@]}"; do
+  IFS='|' read -r phase sub agent skill rules knowledge framework flag <<< "$entry"
+  dir="$CTX/stages/$phase/$sub"
+  mkdir -p "$dir"
 
-## Definition of Done (DoD)
-- [ ] <điều kiện đủ để KẾT THÚC và đi tiếp>
+  # 1. instructions.md — các bước agent phải làm
+  cat > "$dir/instructions.md" <<EOF
+---
+phase: $phase
+substage: $sub
+owner_agent: $agent
+primary_skill: $skill
+flag: ${flag:-none}
+updated: $TODAY
+---
+
+# Instructions — $phase / $sub
+
+> Agent phụ trách: **$agent**. Skill chính: **$skill**.
+> ĐỌC TRƯỚC KHI LÀM: rules.md, framework.md, knowledge.md (cùng thư mục) + charter agents/$agent.md.
+
+## Các bước (điền/điều chỉnh theo bối cảnh dự án)
+1. HYDRATE: đọc state.yaml, charter, rules.md, framework.md của sub-stage này.
+2. EXECUTE theo framework: $framework
+3. Tạo artifact đầu ra (xem gate.md để biết artifact bắt buộc).
+4. WRITE-BACK: cập nhật progress.md + sessions/ + state.yaml (qua scripts/).
+$( [[ "$flag" == "HUMAN" ]] && echo "5. 🧑 DỪNG — trình con người duyệt trước khi advance." )
+$( [[ "$flag" == *GATE* ]] && echo "5. 🚦 Đây là CỔNG CHẶN ($flag) — phải đạt mới được advance." )
+EOF
+
+  # 2. rules.md — bộ luật cứng phải tuân (trỏ tới rule file thật)
+  cat > "$dir/rules.md" <<EOF
+---
+phase: $phase
+substage: $sub
+updated: $TODAY
+---
+
+# Rules (LUẬT CỨNG) — $phase / $sub
+
+Bộ luật BẮT BUỘC cho sub-stage này. Vi phạm = finding ở pha HARDEN (audit).
+
+## Nguồn luật áp dụng
+- **$rules**
+$( [[ "$rules" == none ]] && echo "  (sub-stage này theo playbook quy trình, xem primary_skill: $skill)" )
+
+## Cách áp dụng
+- Mở file luật ở trên trong decision-gates/references/ (hoặc playbook của skill $skill).
+- Mọi quyết định/đầu ra PHẢI nằm trong ranh giới luật đó.
+- Lệch luật → BẮT BUỘC tạo ADR giải trình trong decisions/.
+EOF
+
+  # 3. framework.md — bộ khung / mental model
+  cat > "$dir/framework.md" <<EOF
+---
+phase: $phase
+substage: $sub
+updated: $TODAY
+---
+
+# Framework (KHUÔN) — $phase / $sub
+
+## Mental model / template chính
+**$framework**
+
+## Cách dùng
+- Đây là khuôn tư duy bắt buộc cho sub-stage. KHÔNG tự nghĩ khuôn khác.
+- Template chi tiết: xem skill $skill (SKILL.md + references/).
+EOF
+
+  # 4. knowledge.md — nguồn kiến thức tra cứu
+  cat > "$dir/knowledge.md" <<EOF
+---
+phase: $phase
+substage: $sub
+updated: $TODAY
+---
+
+# Knowledge (KIẾN THỨC) — $phase / $sub
+
+## Nguồn tra cứu cho sub-stage này
+- **$knowledge**
+$( [[ "$knowledge" == "tech-knowledge-base.md" ]] && echo "  → decision-gates/references/tech-knowledge-base.md (catalog platform/arch/tech/db/security)" )
+$( [[ "$knowledge" == "web-research" ]] && echo "  → dùng web search; ghi nguồn (URL + ngày) vào artifact." )
+$( [[ "$knowledge" == none ]] && echo "  → không cần KB ngoài; theo framework + interview/data thực tế." )
+
+## Quy tắc
+- Tra cứu TRƯỚC khi quyết định. KHÔNG bịa.
+- Trích nguồn vào artifact để truy vết.
+EOF
+
+  # 5. gate.md — DoR/DoD
+  gateline=""
+  [[ -n "$flag" ]] && gateline="
+## ⚠ CỔNG ĐẶC BIỆT: $flag"
+  cat > "$dir/gate.md" <<EOF
+# Gate — $phase / $sub
+$gateline
+
+## Definition of Ready (DoR) — đủ để BẮT ĐẦU
+- [ ] Đã đọc instructions.md, rules.md, framework.md, knowledge.md.
+- [ ] Sub-stage trước đã PASS (last_gate_passed khớp).
+
+## Definition of Done (DoD) — đủ để KẾT THÚC
+- [ ] Artifact đầu ra hoàn thành theo framework.
+- [ ] Tuân thủ rules.md (không vi phạm, hoặc có ADR cho ngoại lệ).
+- [ ] progress.md + state.yaml đã write-back.
+$( [[ "$flag" == "HUMAN" ]] && echo "- [ ] 🧑 Con người đã duyệt." )
+$( [[ "$flag" == "VALIDATION-GATE" ]] && echo "- [ ] 🚦 Demand đạt ngưỡng → GO (nếu không: PIVOT/KILL)." )
+$( [[ "$flag" == "MVP-GATE" ]] && echo "- [ ] 🚦 MVP chốt + mọi feature truy vết JTBD." )
+$( [[ "$flag" == "BLUEPRINT-GATE" ]] && echo "- [ ] 🚦 Architecture cover 100% requirements; api-contract đủ để code độc lập; glossary thống nhất." )
+$( [[ "$flag" == "AUDIT-GATE" ]] && echo "- [ ] 🚦 scorecard.yaml = PASS (composite ≥ threshold, sạch block_on)." )
 EOF
 done
 
@@ -95,7 +230,8 @@ EOF
 
 # state.yaml
 cat > "$CTX/project/state.yaml" <<EOF
-current_stage: 01-thinking-problem-framing
+current_phase: 1-discover
+current_stage: 1-discover/1-problem-framing
 status: not-started
 active_agents: []
 last_gate_passed: none
@@ -126,7 +262,9 @@ canonical_sources:
   glossary: project/glossary.md
   threat_model: project/threat-model.md
 protocol: global/context-protocol.md
-human_checkpoints: [04-user-conversations, 07-requirements-scope, 10-shaping-decisions, 22-release-readiness]
+structure: "8 phases -> 23 sub-stages; mỗi sub-stage có bundle: instructions/rules/framework/knowledge/gate"
+human_checkpoints: [2-validate/1-user-interviews, 3-define/1-requirements-scope, 4-decide/2-shaping-decisions, 8-launch/1-release-readiness]
+blocking_gates: [2-validate/3-demand-waitlist, 3-define/2-feature-prioritization, 5-blueprint/3-planning-rules, 7-harden/3-remediation]
 do_not_index: [sessions/, audits/, knowledge/]
 updated: $TODAY
 EOF
@@ -135,9 +273,10 @@ EOF
 cat > "$CTX/progress.md" <<EOF
 # Progress — "ván cờ hiện tại"
 
-- Stage: 01-thinking-problem-framing
+- Phase: 1-discover
+- Sub-stage: 1-discover/1-problem-framing
 - Status: not-started
-- Next: tư duy & đóng khung vấn đề (GĐ1) — chưa code, validate trước
+- Next: tư duy & đóng khung vấn đề — đọc bundle stages/1-discover/1-problem-framing/
 EOF
 printf '# Changelog\n\n- %s init: scaffolded .context/\n' "$TODAY" > "$CTX/changelog.md"
 

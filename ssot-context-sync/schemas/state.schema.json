@@ -1,13 +1,17 @@
 {
   "title": "state.yaml",
   "type": "object",
-  "additionalProperties": false,
-  "required": ["current_stage", "status", "active_agents", "last_gate_passed", "remediation_loops", "escalated", "updated"],
+  "additionalProperties": true,
+  "required": ["current_stage", "status", "last_gate_passed", "updated"],
   "properties": {
-    "current_stage": { "type": "string", "pattern": "^[0-9]{2}-[a-z0-9-]+$|^none$" },
+    "current_phase": { "type": "string" },
+    "current_stage": { "type": "string" },
     "status": { "type": "string", "enum": ["not-started", "in-progress", "blocked", "done"] },
     "active_agents": { "type": "array", "items": { "type": "string" } },
     "last_gate_passed": { "type": "string" },
+    "discover_decide_iteration": { "type": "integer", "minimum": 0 },
+    "validation_iteration": { "type": "integer", "minimum": 0 },
+    "convergence": { "type": "boolean" },
     "remediation_loops": { "type": "integer", "minimum": 0 },
     "escalated": { "type": "boolean" },
     "updated": { "type": "string" }

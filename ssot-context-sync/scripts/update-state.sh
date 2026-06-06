@@ -18,7 +18,7 @@ import sys, datetime
 path = sys.argv[1]
 args = sys.argv[2:]
 
-keys = ["current_stage","status","active_agents","last_gate_passed",
+keys = ["current_phase","current_stage","status","active_agents","last_gate_passed",
         "remediation_loops","escalated","updated"]
 data = {k: None for k in keys}
 extra = {}
@@ -36,6 +36,7 @@ i = 0
 while i < len(args):
     a = args[i]
     if a == "--stage":         data["current_stage"] = args[i+1]; i += 2
+    elif a == "--phase":       data["current_phase"] = args[i+1]; i += 2
     elif a == "--status":      data["status"] = args[i+1]; i += 2
     elif a == "--gate-passed": data["last_gate_passed"] = args[i+1]; i += 2
     elif a == "--agents":
@@ -53,7 +54,7 @@ if data["remediation_loops"] is None: data["remediation_loops"] = "0"
 if data["escalated"] is None:         data["escalated"] = "false"
 data["updated"] = datetime.date.today().isoformat()
 
-out = [f"{k}: {data[k] if data[k] is not None else ''}" for k in keys]
+out = [f"{k}: {data[k] if data[k] is not None else ''}" for k in keys if data[k] is not None]
 out += [f"{k}: {v}" for k, v in extra.items()]
 with open(path, "w", encoding="utf-8") as f:
     f.write("\n".join(out) + "\n")

@@ -16,37 +16,37 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CMD="${1:-help}"
 
-# Danh sách 24 stage (thứ tự) + pha + agent chủ trì + human-checkpoint
-STAGES=(
-  "01-thinking-problem-framing|DISCOVER|product|"
-  "02-market-competitor-research|DISCOVER|researcher|"
-  "03-audience-segmentation|DISCOVER|researcher|"
-  "04-user-conversations|VALIDATE|product-validator|HUMAN"
-  "05-idea-validation|VALIDATE|product-validator|"
-  "06-demand-validation-waitlist|VALIDATE|product-validator|VALIDATION-GATE"
-  "07-requirements-scope|DEFINE|product|HUMAN"
-  "08-feature-prioritization|DEFINE|product|MVP-GATE"
-  "09-feasibility-options|DEFINE|architect|"
-  "10-shaping-decisions|DECIDE|orchestrator|HUMAN"
-  "11-threat-modeling|DECIDE|security|"
-  "12-architecture-data-design|BLUEPRINT|architect|"
-  "13-ux-ui-design|BLUEPRINT|architect|"
-  "14-planning-rules-breakdown|BLUEPRINT|product|BLUEPRINT-GATE"
-  "15-environment-scaffolding|BUILD|backend-engineer|"
-  "16-prototype-spike|BUILD|backend-engineer|"
-  "17-development|BUILD|backend-engineer|"
-  "18-testing-qa|BUILD|qa|"
-  "19-integration-staging|HARDEN|backend-engineer|"
-  "20-deep-audit|HARDEN|auditor|"
-  "21-remediation-upgrade|HARDEN|architect|AUDIT-GATE"
-  "22-release-readiness|LAUNCH|release-manager|HUMAN"
-  "23-production-operations|LAUNCH|orchestrator|"
-  "24-retrospective-final|LAUNCH|orchestrator|"
+# Danh sách 24 sub-stage (thứ tự) | id | agent | flag
+SUBSTAGES=(
+  "1-discover/1-problem-framing|product|"
+  "1-discover/2-market-competitor|researcher|"
+  "1-discover/3-audience-personas|researcher|"
+  "2-validate/1-user-interviews|product-validator|HUMAN"
+  "2-validate/2-idea-experiments|product-validator|"
+  "2-validate/3-demand-waitlist|product-validator|VALIDATION-GATE"
+  "3-define/1-requirements-scope|product|HUMAN"
+  "3-define/2-feature-prioritization|product|MVP-GATE"
+  "4-decide/1-solution-options|architect|"
+  "4-decide/2-shaping-decisions|orchestrator|HUMAN"
+  "4-decide/3-threat-modeling|security|"
+  "5-blueprint/1-architecture-data|architect|"
+  "5-blueprint/2-ux-ui-design|architect|"
+  "5-blueprint/3-planning-rules|product|BLUEPRINT-GATE"
+  "6-build/1-scaffolding|backend-engineer|"
+  "6-build/2-spike|backend-engineer|"
+  "6-build/3-development|backend-engineer|"
+  "6-build/4-testing-qa|qa|"
+  "7-harden/1-staging|backend-engineer|"
+  "7-harden/2-deep-audit|auditor|"
+  "7-harden/3-remediation|architect|AUDIT-GATE"
+  "8-launch/1-release-readiness|release-manager|HUMAN"
+  "8-launch/2-production|orchestrator|"
+  "8-launch/3-retrospective|orchestrator|"
 )
 
-stage_index() {  # $1 = stage id -> echo index (0-based) hoặc -1
+stage_index() {  # $1 = sub-stage id -> echo index (0-based) hoặc -1
   local i=0
-  for entry in "${STAGES[@]}"; do
+  for entry in "${SUBSTAGES[@]}"; do
     [[ "${entry%%|*}" == "$1" ]] && { echo "$i"; return; }
     i=$((i+1))
   done
@@ -81,20 +81,22 @@ case "$CMD" in
     IDX="$(stage_index "$CUR")"
     STATUS="$(field "$CTX" status)"
     GATE_PASSED="$(field "$CTX" last_gate_passed)"
-    entry="${STAGES[$IDX]}"
-    IFS='|' read -r sid phase agent flag <<< "$entry"
+    entry="${SUBSTAGES[$IDX]}"
+    IFS='|' read -r sid agent flag <<< "$entry"
+    phase="${sid%%/*}"
     NUM=$((IDX+1))
     echo "=============================================================="
     echo " MULTI-AGENT COMPANY — STATUS"
     echo "=============================================================="
-    echo " Giai đoạn:   GĐ$NUM/24  ($sid)"
+    echo " Sub-stage:   $NUM/24  ($sid)"
     echo " Pha:         $phase"
     echo " Trạng thái:  $STATUS"
     echo " Agent:       $agent"
     echo " Gate cuối:   $GATE_PASSED"
     [[ -n "$flag" ]] && echo " ⚠ ĐẶC BIỆT:  $flag"
     echo "--------------------------------------------------------------"
-    echo " Artifact giai đoạn này: stages/$sid/"
+    echo " Bundle giai đoạn này: stages/$sid/"
+    echo "   instructions.md · rules.md · framework.md · knowledge.md · gate.md"
     case "$flag" in
       HUMAN)            echo " 🧑 Cần CON NGƯỜI duyệt trước khi qua." ;;
       VALIDATION-GATE)  echo " 🚦 CỔNG VALIDATION: bash run.sh validate ${2} <go|pivot|kill>" ;;
@@ -112,7 +114,7 @@ case "$CMD" in
   gate)
     CTX="$(require_ctx "${2:?repo dir}")"
     CUR="$(get_current_stage "$CTX")"
-    echo "=== Gate: $CUR ==="
+    echo "=== Bundle: $CUR ==="
     cat "$CTX/stages/$CUR/gate.md"
     ;;
 
@@ -120,8 +122,8 @@ case "$CMD" in
     CTX="$(require_ctx "${2:?repo dir}")"
     CUR="$(get_current_stage "$CTX")"
     IDX="$(stage_index "$CUR")"
-    IFS='|' read -r sid phase agent flag <<< "${STAGES[$IDX]}"
-    echo "Agent phụ trách GĐ hiện tại ($sid): $agent"
+    IFS='|' read -r sid agent flag <<< "${SUBSTAGES[$IDX]}"
+    echo "Agent phụ trách sub-stage hiện tại ($sid): $agent"
     echo "Charter: .context/agents/$agent.md"
     [[ -f "$CTX/agents/$agent.md" ]] && { echo "---"; cat "$CTX/agents/$agent.md"; }
     ;;
@@ -130,21 +132,22 @@ case "$CMD" in
     CTX="$(require_ctx "${2:?repo dir}")"
     CUR="$(get_current_stage "$CTX")"
     IDX="$(stage_index "$CUR")"
-    IFS='|' read -r sid phase agent flag <<< "${STAGES[$IDX]}"
+    IFS='|' read -r sid agent flag <<< "${SUBSTAGES[$IDX]}"
     # chặn cổng validation phải dùng lệnh validate
     if [[ "$flag" == "VALIDATION-GATE" ]]; then
-      echo "⚠ GĐ6 là CỔNG VALIDATION. Dùng: bash run.sh validate ${2} <go|pivot|kill>" >&2
+      echo "⚠ Đây là CỔNG VALIDATION. Dùng: bash run.sh validate ${2} <go|pivot|kill>" >&2
       exit 1
     fi
     NEXT_IDX=$((IDX+1))
-    if [[ "$NEXT_IDX" -ge "${#STAGES[@]}" ]]; then
-      echo "🎉 Đã ở giai đoạn cuối (GĐ24). Hoàn tất vòng. Feedback -> quay lại GĐ1 cho version sau."
+    if [[ "$NEXT_IDX" -ge "${#SUBSTAGES[@]}" ]]; then
+      echo "🎉 Đã ở sub-stage cuối (8-launch/3-retrospective). Hoàn tất vòng. Feedback -> ↩ pha 1 cho version sau."
       bash "$HERE/ssot-context-sync/scripts/update-state.sh" "$CTX/project/state.yaml" --status done --gate-passed "$sid" >/dev/null
       exit 0
     fi
-    NEXT_SID="${STAGES[$NEXT_IDX]%%|*}"
+    NEXT_SID="${SUBSTAGES[$NEXT_IDX]%%|*}"
+    NEXT_PHASE="${NEXT_SID%%/*}"
     bash "$HERE/ssot-context-sync/scripts/update-state.sh" "$CTX/project/state.yaml" \
-      --gate-passed "$sid" --stage "$NEXT_SID" --status in-progress >/dev/null
+      --gate-passed "$sid" --stage "$NEXT_SID" --phase "$NEXT_PHASE" --status in-progress >/dev/null
     echo "✅ Qua cổng $sid. Giờ ở: $NEXT_SID"
     echo ">>> bash run.sh status ${2}"
     ;;
@@ -156,15 +159,14 @@ case "$CMD" in
     case "$DECISION" in
       go)
         bash "$HERE/ssot-context-sync/scripts/update-state.sh" "$CTX/project/state.yaml" \
-          --gate-passed "$CUR" --stage "07-requirements-scope" --status in-progress >/dev/null
-        echo "✅ VALIDATION = GO. Demand đủ. Sang GĐ7 (Requirements)."
+          --gate-passed "$CUR" --stage "3-define/1-requirements-scope" --phase "3-define" --status in-progress >/dev/null
+        echo "✅ VALIDATION = GO. Demand đủ. Sang 3-define/1-requirements-scope."
         ;;
       pivot)
         ITER="$(field "$CTX" validation_iteration)"; ITER=$(( ${ITER:-0} + 1 ))
         bash "$HERE/ssot-context-sync/scripts/update-state.sh" "$CTX/project/state.yaml" \
-          --stage "01-thinking-problem-framing" --status in-progress >/dev/null
-        echo "🔄 VALIDATION = PIVOT (lần $ITER). Quay lại GĐ1 với góc nhìn mới."
-        echo "   (Sửa validation_iteration=$ITER thủ công nếu cần, hoặc ghi ADR lý do pivot.)"
+          --stage "1-discover/1-problem-framing" --phase "1-discover" --status in-progress >/dev/null
+        echo "🔄 VALIDATION = PIVOT (lần $ITER). Quay lại 1-discover/1-problem-framing với góc nhìn mới."
         ;;
       kill)
         bash "$HERE/ssot-context-sync/scripts/update-state.sh" "$CTX/project/state.yaml" \
@@ -176,14 +178,15 @@ case "$CMD" in
     ;;
 
   map)
-    echo "=== Bản đồ 24 giai đoạn (8 pha) ==="
+    echo "=== Bản đồ 8 pha → 24 sub-stage ==="
     n=0; lastphase=""
-    for entry in "${STAGES[@]}"; do
-      IFS='|' read -r sid phase agent flag <<< "$entry"
+    for entry in "${SUBSTAGES[@]}"; do
+      IFS='|' read -r sid agent flag <<< "$entry"
+      phase="${sid%%/*}"
       n=$((n+1))
       [[ "$phase" != "$lastphase" ]] && { echo ""; echo "[$phase]"; lastphase="$phase"; }
       mark=""; [[ -n "$flag" ]] && mark="   <-- $flag"
-      printf "  GĐ%-2d %-32s (%s)%s\n" "$n" "$sid" "$agent" "$mark"
+      printf "  %-2d %-34s (%s)%s\n" "$n" "$sid" "$agent" "$mark"
     done
     ;;
 
